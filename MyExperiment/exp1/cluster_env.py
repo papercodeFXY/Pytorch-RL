@@ -148,9 +148,9 @@ class Cluster(tk.Tk, object):
 
 
 def state_init():
-    init_state = pd.DataFrame(np.zeros(327*8).reshape(327, 8), columns=[0, 1, 2, 3, 4, 5, 6, 7])
+    init_state = pd.DataFrame(np.zeros(12*4).reshape(12, 4), columns=[0, 1, 2, 3])
     for i in range(len(init_state)):
-        j = random.randint(0, 7)
+        j = random.randint(0, 3)
         init_state.iloc[i][j] = 1
     return init_state
 
