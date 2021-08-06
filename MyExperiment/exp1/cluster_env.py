@@ -68,7 +68,7 @@ class Cluster(tk.Tk, object):
     # read the file and store in an array[query,[server1,server2,......]]
     def read_file(self):
         server_attribute = self.server_attribute
-        with open("D:\SynologyDrive\Reinforcement-learning-with-tensorflow-master\contents\MyExperiment\Exp3_test\QueryAttribute_test",'r') as f:
+        with open("./QueryAttribute_test",'r') as f:
             content = f.readlines()
             QSs = []
             for item in content:
