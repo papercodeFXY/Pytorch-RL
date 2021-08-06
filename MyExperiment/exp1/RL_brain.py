@@ -33,7 +33,7 @@ server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
 init_state = state_init()
 env = Cluster(init_state, server_attribute)
 N_ACTIONS = len(env.action_space)
-N_STATES = len(env.state_init)*len((env.state_init).columns)
+N_STATES = 12*2
 # ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape
 
 
@@ -128,7 +128,7 @@ if __name__ == '__main__':
         ep_r = 0
         while True:
 
-            action = dqn.choose_action(str(state_arr_for_one))
+            action = dqn.choose_action(state_arr_for_one)
 
             # take action
             state_, costs_, reward_, cost_all, is_better = env.step(action, state, costs)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
             # r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
             # r = r1 + r2
 
-            dqn.store_transition(state, action, reward, state_)
+            dqn.store_transition(state_arr_for_one, action, reward, state__arr)
 
             ep_r += reward
             if dqn.memory_counter > MEMORY_CAPACITY:
