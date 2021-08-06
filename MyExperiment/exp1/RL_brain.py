@@ -9,6 +9,7 @@ from cluster_env import Cluster
 import datetime
 import matplotlib.pyplot as plt
 import pylab as pl
+from itertools import chain
 
 def state_init():
     init_state = pd.DataFrame(np.zeros(12*4).reshape(12, 4), columns=[0, 1, 2, 3])
@@ -33,15 +34,17 @@ server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
 init_state = state_init()
 env = Cluster(init_state, server_attribute)
 N_ACTIONS = len(env.action_space)
-N_STATES = 12*2
+N_STATES = 48
 # ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape
 
 
 class Net(nn.Module):
     def __init__(self, ):
         super(Net, self).__init__()
+        # self.fc1 = nn.Linear(N_STATES, 50)
         self.fc1 = nn.Linear(N_STATES, 50)
         self.fc1.weight.data.normal_(0, 0.1)   # initialization
+        #self.out = nn.Linear(50, N_ACTIONS)
         self.out = nn.Linear(50, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)   # initialization
 
@@ -55,7 +58,6 @@ class Net(nn.Module):
 class DQN(object):
     def __init__(self):
         self.eval_net, self.target_net = Net(), Net()
-
         self.learn_step_counter = 0                                     # for target updating
         self.memory_counter = 0                                         # for storing memory
         self.memory = np.zeros((MEMORY_CAPACITY, N_STATES * 2 + 2))     # initialize memory
@@ -115,7 +117,7 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(400):
+    for i_episode in range(60000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -127,9 +129,7 @@ if __name__ == '__main__':
         reward = init_reward
         ep_r = 0
         while True:
-
-            action = dqn.choose_action(state_arr_for_one)
-
+            action = dqn.choose_action(list(chain.from_iterable(np.array(state))))
             # take action
             state_, costs_, reward_, cost_all, is_better = env.step(action, state, costs)
 
@@ -137,8 +137,6 @@ if __name__ == '__main__':
 
             different = [y for y in (state_arr_for_one + state__arr) if y not in state_arr_for_one]
             print("different:", different)
-
-
             if ((reward_ < init_reward and reward_ < min(reward_list) or
                  (len(different) == 0 and reward_ >= reward and reward_ > (init_reward)))):
                 done = True
@@ -148,18 +146,13 @@ if __name__ == '__main__':
             print("done:", done)
 
             reward = reward_
-
             reward_list.append(reward)
-
-
-
             # # modify the reward
             # x, x_dot, theta, theta_dot = s_
             # r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
             # r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
             # r = r1 + r2
-
-            dqn.store_transition(state_arr_for_one, action, reward, state__arr)
+            dqn.store_transition(list(chain.from_iterable(np.array(state))), action, reward, list(chain.from_iterable(np.array(state_))))
 
             ep_r += reward
             if dqn.memory_counter > MEMORY_CAPACITY:
@@ -173,13 +166,10 @@ if __name__ == '__main__':
             if done:
                 break
 
-
             state_arr_for_one = state__arr
             different_init = [y for y in (state_init_arr + state__arr) if y not in state_init_arr]
 
             costs = costs_
-
-
             state = state_
 
         reward_all_list.append(reward)
@@ -216,7 +206,7 @@ if __name__ == '__main__':
 
     y_1 = reward_all_list
     y_all_list = y_1
-    x = (np.arange(len(y_all_list))+1)*500
+    x = (np.arange(len(y_all_list)))
     y = y_all_list
     y1 = [init_reward]*len(x)
     fig = plt.Figure(figsize=(14, 10))

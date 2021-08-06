@@ -39,6 +39,8 @@ class Cluster(tk.Tk, object):
     def step(self, action, state, costs):
         s = state.copy()
         #action_real[查询，移动到的服务器]
+        if isinstance(action, np.ndarray):
+           action = action[0]
         action_real = self.action_space[action]
         q = action_real[0]
         index_server = action_real[1]
