@@ -23,8 +23,8 @@ BATCH_SIZE = 8
 LR = 0.01                   # learning rate
 EPSILON = 0.8               # greedy policy
 GAMMA = 0.9                 # reward discount
-TARGET_REPLACE_ITER = 100   # target update frequency
-MEMORY_CAPACITY = 2000
+TARGET_REPLACE_ITER = 10   # target update frequency
+MEMORY_CAPACITY = 10000
 server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
                                           0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
                                           1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
