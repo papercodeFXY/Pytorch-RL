@@ -24,7 +24,7 @@ LR = 0.01                   # learning rate
 EPSILON = 0.9               # greedy policy
 GAMMA = 0.9                 # reward discount
 TARGET_REPLACE_ITER = 100   # target update frequency
-MEMORY_CAPACITY = 2000
+MEMORY_CAPACITY = 10000
 server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
                                           0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
                                           1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -102,6 +102,7 @@ class DQN(object):
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
         q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE, 1)   # shape (batch, 1)
         loss = self.loss_func(q_eval, q_target)
+        print("loss:", loss)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -117,7 +118,7 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(60000):
+    for i_episode in range(500000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -137,8 +138,8 @@ if __name__ == '__main__':
 
             different = [y for y in (state_arr_for_one + state__arr) if y not in state_arr_for_one]
             print("different:", different)
-            if ((reward_ < init_reward and reward_ < min(reward_list) or
-                 (len(different) == 0 and reward_ >= reward and reward_ > (init_reward)))):
+            if ((reward_ < init_reward and reward_ < min(reward_list)) or
+                 (len(different) == 0 and reward_ >= reward and reward_ > (init_reward))):
                 done = True
             else:
                 done = False
@@ -156,8 +157,11 @@ if __name__ == '__main__':
 
             ep_r += reward
             if dqn.memory_counter > MEMORY_CAPACITY:
+                print("learn")
                 dqn.learn()
                 if done:
+                    if i_episode % 100 == 0:
+                        reward_all_list.append(reward)
                     print('Ep: ', i_episode,
                           '| Ep_r: ', round(ep_r, 2))
 
@@ -172,7 +176,7 @@ if __name__ == '__main__':
             costs = costs_
             state = state_
 
-        reward_all_list.append(reward)
+
         epoch_curr_time2 = datetime.datetime.now()
         epoch_time = epoch_curr_time2 - epoch_curr_time1
         # if (action in actions and q_table.loc[str(state), action] >= 0) and (done and q_table.loc[str(state), action] >= 0 and reward > 0):
@@ -206,6 +210,7 @@ if __name__ == '__main__':
 
     y_1 = reward_all_list
     y_all_list = y_1
+    print("y_all_list:", len(y_all_list))
     x = (np.arange(len(y_all_list)))
     y = y_all_list
     y1 = [init_reward]*len(x)

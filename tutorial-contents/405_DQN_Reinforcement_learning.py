@@ -102,6 +102,7 @@ print('\nCollecting experience...')
 for i_episode in range(400):
     s = env.reset()
     ep_r = 0
+    sum = 0
     while True:
         env.render()
         a = dqn.choose_action(s)
@@ -116,13 +117,14 @@ for i_episode in range(400):
         r = r1 + r2
 
         dqn.store_transition(s, a, r, s_)
-
+        sum += 1
         ep_r += r
         if dqn.memory_counter > MEMORY_CAPACITY:
             dqn.learn()
             if done:
                 print('Ep: ', i_episode,
                       '| Ep_r: ', round(ep_r, 2))
+                print("本轮循环的次数：", sum)
 
         if done:
             break
