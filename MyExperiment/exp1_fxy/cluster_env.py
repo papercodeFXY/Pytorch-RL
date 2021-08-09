@@ -19,11 +19,8 @@ class Cluster(tk.Tk, object):
                                       [4,0],[4,1],[4,2],[4,3],
                                       [5,0],[5,1],[5,2],[5,3],
                                       [6,0],[6,1],[6,2],[6,3],
-                                      [7,0],[7,1],[7,2],[7,3],
-                                      [8,0],[8,1],[8,2],[8,3],
-                                      [9,0],[9,1],[9,2],[9,3],
-                                      [10,0],[10,1],[10,2],[10,3],
-                                      [11,0],[11,1],[11,2],[11,3]])
+                                      [7,0],[7,1],[7,2],[7,3]
+                                      ])
         self.n_actions = len(self.action_space)
         self.cost_matrix = pd.DataFrame(np.array([[0,1,5,12],
                                                   [1,0,4,2],
@@ -127,7 +124,8 @@ class Cluster(tk.Tk, object):
             list.append(state[i].sum())
 
         load_weight_var = np.var(list)
-        reward = (len(state)/cost_all) * self.function(1.1, load_weight_var)
+        reward = (len(state)/cost_all) \
+                 # * self.function(1.1, load_weight_var)
         return reward
 
     def function(self, a, x):
@@ -144,7 +142,6 @@ class Cluster(tk.Tk, object):
                     state_arr.append(i)
                     state_arr.append(j)
                     states.append(state_arr)
-
         return states
 
 

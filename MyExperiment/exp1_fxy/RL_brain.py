@@ -12,19 +12,19 @@ import pylab as pl
 from itertools import chain
 
 def state_init():
-    init_state = pd.DataFrame(np.zeros(12*4).reshape(12, 4), columns=[0, 1, 2, 3])
+    init_state = pd.DataFrame(np.zeros(8*4).reshape(8, 4), columns=[0, 1, 2, 3])
     for i in range(len(init_state)):
         j = random.randint(0, 3)
         init_state.iloc[i][j] = 1
     return init_state
 
 # Hyper Parameters
-BATCH_SIZE = 32
+BATCH_SIZE = 8
 LR = 0.01                   # learning rate
-EPSILON = 0.9               # greedy policy
+EPSILON = 0.8               # greedy policy
 GAMMA = 0.9                 # reward discount
 TARGET_REPLACE_ITER = 100   # target update frequency
-MEMORY_CAPACITY = 10000
+MEMORY_CAPACITY = 2000
 server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
                                           0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
                                           1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -34,7 +34,7 @@ server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
 init_state = state_init()
 env = Cluster(init_state, server_attribute)
 N_ACTIONS = len(env.action_space)
-N_STATES = 48
+N_STATES = len(env.state_init)*len(env.state_init.columns)
 # ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape
 
 
@@ -70,11 +70,13 @@ class DQN(object):
         if np.random.uniform() < EPSILON:   # greedy
             actions_value = self.eval_net.forward(x)
             action = torch.max(actions_value, 1)[1].data.numpy()
+            is_random = False
             # action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)  # return the argmax index
         else:   # random
             action = np.random.randint(0, N_ACTIONS)
+            is_random = True
             # action = action if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)
-        return action
+        return action, is_random
 
     def store_transition(self, s, a, r, s_):
         transition = np.hstack((s, [a, r], s_))
@@ -118,7 +120,7 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(500000):
+    for i_episode in range(200000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -130,7 +132,7 @@ if __name__ == '__main__':
         reward = init_reward
         ep_r = 0
         while True:
-            action = dqn.choose_action(list(chain.from_iterable(np.array(state))))
+            action, is_random = dqn.choose_action(list(chain.from_iterable(np.array(state))))
             # take action
             state_, costs_, reward_, cost_all, is_better = env.step(action, state, costs)
 
@@ -139,12 +141,18 @@ if __name__ == '__main__':
             different = [y for y in (state_arr_for_one + state__arr) if y not in state_arr_for_one]
             print("different:", different)
             if ((reward_ < init_reward and reward_ < min(reward_list)) or
-                 (len(different) == 0 and reward_ >= reward and reward_ > (init_reward))):
+                 (not is_random and len(different) == 0 and reward_ >= reward and reward_ > (init_reward))):
                 done = True
             else:
                 done = False
             # RL learn from this transition
             print("done:", done)
+
+            if reward_ < init_reward and reward_ < min(reward_list):
+                print("负结束")
+
+            if not is_random and len(different) == 0 and reward_ >= reward and reward_ > (init_reward):
+                print("正结束")
 
             reward = reward_
             reward_list.append(reward)
