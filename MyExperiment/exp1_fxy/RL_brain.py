@@ -20,10 +20,10 @@ def state_init():
 
 # Hyper Parameters
 BATCH_SIZE = 8
-LR = 0.01                   # learning rate
+LR = 0.0005                   # learning rate
 EPSILON = 0.8               # greedy policy
 GAMMA = 0.9                 # reward discount
-TARGET_REPLACE_ITER = 10   # target update frequency
+TARGET_REPLACE_ITER = 5   # target update frequency
 MEMORY_CAPACITY = 10000
 server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
                                           0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
@@ -42,10 +42,10 @@ class Net(nn.Module):
     def __init__(self, ):
         super(Net, self).__init__()
         # self.fc1 = nn.Linear(N_STATES, 50)
-        self.fc1 = nn.Linear(N_STATES, 50)
+        self.fc1 = nn.Linear(N_STATES, 100)
         self.fc1.weight.data.normal_(0, 0.1)   # initialization
         #self.out = nn.Linear(50, N_ACTIONS)
-        self.out = nn.Linear(50, N_ACTIONS)
+        self.out = nn.Linear(100, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(200000):
+    for i_episode in range(20000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -168,7 +168,7 @@ if __name__ == '__main__':
                 print("learn")
                 dqn.learn()
                 if done:
-                    if i_episode % 100 == 0:
+                    if i_episode % 50 == 0:
                         reward_all_list.append(reward)
                     print('Ep: ', i_episode,
                           '| Ep_r: ', round(ep_r, 2))
