@@ -12,7 +12,7 @@ import pylab as pl
 from itertools import chain
 
 def state_init():
-    init_state = pd.DataFrame(np.zeros(8*4).reshape(8, 4), columns=[0, 1, 2, 3])
+    init_state = pd.DataFrame(np.zeros(24*4).reshape(24, 4), columns=[0, 1, 2, 3])
     for i in range(len(init_state)):
         j = random.randint(0, 3)
         init_state.iloc[i][j] = 1
@@ -104,7 +104,7 @@ class DQN(object):
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
         q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE, 1)   # shape (batch, 1)
         loss = self.loss_func(q_eval, q_target)
-        print("loss:", loss)
+        # print("loss:", loss)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(20000):
+    for i_episode in range(100000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -139,20 +139,20 @@ if __name__ == '__main__':
             state__arr = env.state_array(state_)
 
             different = [y for y in (state_arr_for_one + state__arr) if y not in state_arr_for_one]
-            print("different:", different)
+            # print("different:", different)
             if ((reward_ < init_reward and reward_ < min(reward_list)) or
                  (not is_random and len(different) == 0 and reward_ >= reward and reward_ > (init_reward))):
                 done = True
             else:
                 done = False
             # RL learn from this transition
-            print("done:", done)
+            # print("done:", done)
 
-            if reward_ < init_reward and reward_ < min(reward_list):
-                print("负结束")
-
-            if not is_random and len(different) == 0 and reward_ >= reward and reward_ > (init_reward):
-                print("正结束")
+            # if reward_ < init_reward and reward_ < min(reward_list):
+            #     print("负结束")
+            #
+            # if not is_random and len(different) == 0 and reward_ >= reward and reward_ > (init_reward):
+            #     print("正结束")
 
             reward = reward_
             reward_list.append(reward)
@@ -165,13 +165,13 @@ if __name__ == '__main__':
 
             ep_r += reward
             if dqn.memory_counter > MEMORY_CAPACITY:
-                print("learn")
+                # print("learn")
                 dqn.learn()
                 if done:
-                    if i_episode % 50 == 0:
+                    if (i_episode+1) % 100 == 0:
                         reward_all_list.append(reward)
-                    print('Ep: ', i_episode,
-                          '| Ep_r: ', round(ep_r, 2))
+                    # print('Ep: ', i_episode,
+                    #       '| Ep_r: ', round(ep_r, 2))
 
             sum += 1
 
@@ -199,17 +199,17 @@ if __name__ == '__main__':
         cost_all_list.append(cost_all)
         print("epoch:", i_episode+1)
         print("The number of cycles in this epoch：", sum)
-        print("The reward list:", reward_list)
+        # print("The reward list:", reward_list)
         print("The best reward in this epoch：", max(reward_list))
         print("The final reward in this epoch:", reward)
-        print("The final cost in this epoch:", cost_all)
-        print("当前状态与初始状态的差别", different_init)
-        print("当前状态与初始状态的差别数", len(different_init))
-        print("epoch_time:", epoch_time, "\n")
+        # print("The final cost in this epoch:", cost_all)
+        # print("当前状态与初始状态的差别", different_init)
+        # print("当前状态与初始状态的差别数", len(different_init))
+        # print("epoch_time:", epoch_time, "\n")
 
     print("------------------------")
-    print("The final state_array:", state__arr)
-    print("The final cost:", cost_all)
+    # print("The final state_array:", state__arr)
+    # print("The final cost:", cost_all)
 
     improve = ((reward_all_list[-1] - init_reward)/init_reward)*100
     print("The improve percent:", improve, "%")
