@@ -25,6 +25,7 @@ env = gym.make('CartPole-v0')
 env = env.unwrapped
 N_ACTIONS = env.action_space.n
 N_STATES = env.observation_space.shape[0]
+# print(env.observation_space)
 ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape     # to confirm the shape
 
 
@@ -37,6 +38,7 @@ class Net(nn.Module):
         self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
+
         x = self.fc1(x)
         x = F.relu(x)
         actions_value = self.out(x)
@@ -54,6 +56,7 @@ class DQN(object):
         self.loss_func = nn.MSELoss()
 
     def choose_action(self, x):
+        # print(x)
         x = torch.unsqueeze(torch.FloatTensor(x), 0)
         # input only one sample
         if np.random.uniform() < EPSILON:   # greedy
