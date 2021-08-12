@@ -142,7 +142,8 @@ if __name__ == '__main__':
         reward = init_reward
         ep_r = 0
         while True:
-            action, is_random = dqn.choose_action(list(chain.from_iterable(np.array(state))))
+            state_list = list(chain.from_iterable(np.array(state)))
+            action, is_random = dqn.choose_action(state_list)
             # take action
             state_, costs_, reward_, cost_all = env.step(action, state, costs)
 
@@ -164,7 +165,7 @@ if __name__ == '__main__':
 
             reward = reward_
             reward_list.append(reward)
-            dqn.store_transition(list(chain.from_iterable(np.array(state))), action, reward, list(chain.from_iterable(np.array(state_))))
+            dqn.store_transition(state_list, action, reward, list(chain.from_iterable(np.array(state_))))
 
             ep_r += reward
             if dqn.memory_counter > MEMORY_CAPACITY:
