@@ -12,9 +12,9 @@ import pylab as pl
 from itertools import chain
 
 def state_init():
-    init_state = pd.DataFrame(np.zeros(24*4).reshape(24, 4), columns=[0, 1, 2, 3])
+    init_state = pd.DataFrame(np.zeros(327*8).reshape(327, 8), columns=[0, 1, 2, 3, 4, 5, 6, 7])
     for i in range(len(init_state)):
-        j = random.randint(0, 3)
+        j = random.randint(0, len(init_state.columns)-1)
         init_state.iloc[i][j] = 1
     return init_state
 
@@ -24,13 +24,23 @@ LR = 0.0005                   # learning rate
 EPSILON = 0.8               # greedy policy
 GAMMA = 0.9                 # reward discount
 TARGET_REPLACE_ITER = 5   # target update frequency
-MEMORY_CAPACITY = 10000
-server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
-                                          0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
-                                          1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
-                                          0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1]).
-                                reshape(4, 12),
-                                columns=np.arange(12))
+MEMORY_CAPACITY = 100000
+server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                          0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+                                          1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
+                                          0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                                          0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,
+                                          0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                                          0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]).
+                                reshape(8, 24),
+                                columns=np.arange(24))
+# server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+#                                           0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
+#                                           1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+#                                           0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1]).
+#                                 reshape(4, 12),
+#                                 columns=np.arange(12))
 init_state = state_init()
 env = Cluster(init_state, server_attribute)
 N_ACTIONS = len(env.action_space)
@@ -120,7 +130,7 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(100000):
+    for i_episode in range(20000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -134,7 +144,7 @@ if __name__ == '__main__':
         while True:
             action, is_random = dqn.choose_action(list(chain.from_iterable(np.array(state))))
             # take action
-            state_, costs_, reward_, cost_all, is_better = env.step(action, state, costs)
+            state_, costs_, reward_, cost_all = env.step(action, state, costs)
 
             state__arr = env.state_array(state_)
 
@@ -145,8 +155,6 @@ if __name__ == '__main__':
                 done = True
             else:
                 done = False
-            # RL learn from this transition
-            # print("done:", done)
 
             # if reward_ < init_reward and reward_ < min(reward_list):
             #     print("负结束")
@@ -156,11 +164,6 @@ if __name__ == '__main__':
 
             reward = reward_
             reward_list.append(reward)
-            # # modify the reward
-            # x, x_dot, theta, theta_dot = s_
-            # r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
-            # r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
-            # r = r1 + r2
             dqn.store_transition(list(chain.from_iterable(np.array(state))), action, reward, list(chain.from_iterable(np.array(state_))))
 
             ep_r += reward
@@ -168,10 +171,8 @@ if __name__ == '__main__':
                 # print("learn")
                 dqn.learn()
                 if done:
-                    if (i_episode+1) % 100 == 0:
+                    if (i_episode+1) % 50 == 0:
                         reward_all_list.append(reward)
-                    # print('Ep: ', i_episode,
-                    #       '| Ep_r: ', round(ep_r, 2))
 
             sum += 1
 
@@ -187,14 +188,6 @@ if __name__ == '__main__':
 
         epoch_curr_time2 = datetime.datetime.now()
         epoch_time = epoch_curr_time2 - epoch_curr_time1
-        # if (action in actions and q_table.loc[str(state), action] >= 0) and (done and q_table.loc[str(state), action] >= 0 and reward > 0):
-        #     break
-        # else:
-        #     actions.append(action)
-        # break while loop when end of this episode
-
-        # if done and q_table.loc[str(state),action]!=0:
-        #     break
 
         cost_all_list.append(cost_all)
         print("epoch:", i_episode+1)
