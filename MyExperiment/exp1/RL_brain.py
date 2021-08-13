@@ -88,6 +88,7 @@ class DQN(object):
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
             self.target_net.to(device)
+            print(next(self.target_net.parameters()).device)
         self.learn_step_counter += 1
 
         # sample batch transitions

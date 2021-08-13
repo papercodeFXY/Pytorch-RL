@@ -46,7 +46,7 @@ env = Cluster(init_state, server_attribute)
 N_ACTIONS = len(env.action_space)
 N_STATES = len(env.state_init)*len(env.state_init.columns)
 # ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape
-device = torch.device('cuda:0')
+device = torch.device('cuda:0'if torch.cuda.is_available() else "cpu")
 
 class Net(nn.Module):
     def __init__(self, ):
@@ -100,6 +100,7 @@ class DQN(object):
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
             self.target_net.to(device)
+            print(next(self.target_net.parameters()).device)
         self.learn_step_counter += 1
 
         # sample batch transitions
