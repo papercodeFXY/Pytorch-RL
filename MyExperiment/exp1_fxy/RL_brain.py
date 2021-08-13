@@ -19,12 +19,12 @@ def state_init():
     return init_state
 
 # Hyper Parameters
-BATCH_SIZE = 8
+BATCH_SIZE = 128
 LR = 0.0005                   # learning rate
 EPSILON = 0.8               # greedy policy
 GAMMA = 0.9                 # reward discount
 TARGET_REPLACE_ITER = 5   # target update frequency
-MEMORY_CAPACITY = 100000
+MEMORY_CAPACITY = 10000
 server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                           0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
                                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
@@ -46,7 +46,7 @@ env = Cluster(init_state, server_attribute)
 N_ACTIONS = len(env.action_space)
 N_STATES = len(env.state_init)*len(env.state_init.columns)
 # ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape
-
+device = torch.device('cuda:0'if torch.cuda.is_available() else "cpu")
 
 class Net(nn.Module):
     def __init__(self, ):
@@ -67,7 +67,7 @@ class Net(nn.Module):
 
 class DQN(object):
     def __init__(self):
-        self.eval_net, self.target_net = Net(), Net()
+        self.eval_net, self.target_net = Net().to(device), Net().to(device)
         self.learn_step_counter = 0                                     # for target updating
         self.memory_counter = 0                                         # for storing memory
         self.memory = np.zeros((MEMORY_CAPACITY, N_STATES * 2 + 2))     # initialize memory
@@ -75,11 +75,11 @@ class DQN(object):
         self.loss_func = nn.MSELoss()
 
     def choose_action(self, x):
-        x = torch.unsqueeze(torch.FloatTensor(x), 0)
+        x = torch.unsqueeze(torch.FloatTensor(x), 0).to(device)
         # input only one sample
         if np.random.uniform() < EPSILON:   # greedy
             actions_value = self.eval_net.forward(x)
-            action = torch.max(actions_value, 1)[1].data.numpy()
+            action = torch.max(actions_value, 1)[1].data.cpu().numpy()
             is_random = False
             # action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)  # return the argmax index
         else:   # random
@@ -99,15 +99,17 @@ class DQN(object):
         # target parameter update
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
+            self.target_net.to(device)
+            print(next(self.target_net.parameters()).device)
         self.learn_step_counter += 1
 
         # sample batch transitions
         sample_index = np.random.choice(MEMORY_CAPACITY, BATCH_SIZE)
         b_memory = self.memory[sample_index, :]
-        b_s = torch.FloatTensor(b_memory[:, :N_STATES])
-        b_a = torch.LongTensor(b_memory[:, N_STATES:N_STATES+1].astype(int))
-        b_r = torch.FloatTensor(b_memory[:, N_STATES+1:N_STATES+2])
-        b_s_ = torch.FloatTensor(b_memory[:, -N_STATES:])
+        b_s = torch.FloatTensor(b_memory[:, :N_STATES]).to(device)
+        b_a = torch.LongTensor(b_memory[:, N_STATES:N_STATES+1].astype(int)).to(device)
+        b_r = torch.FloatTensor(b_memory[:, N_STATES+1:N_STATES+2]).to(device)
+        b_s_ = torch.FloatTensor(b_memory[:, -N_STATES:]).to(device)
 
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
@@ -157,11 +159,11 @@ if __name__ == '__main__':
             else:
                 done = False
 
-            # if reward_ < init_reward and reward_ < min(reward_list):
-            #     print("负结束")
-            #
-            # if not is_random and len(different) == 0 and reward_ >= reward and reward_ > (init_reward):
-            #     print("正结束")
+            if reward_ < init_reward and reward_ < min(reward_list):
+                print("负结束")
+
+            if not is_random and len(different) == 0 and reward_ >= reward and reward_ > (init_reward):
+                print("正结束")
 
             reward = reward_
             reward_list.append(reward)

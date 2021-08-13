@@ -20,10 +20,10 @@ def state_init():
 
 # Hyper Parameters
 BATCH_SIZE = 16
-LR = 0.0005                   # learning rate
-EPSILON = 0.8               # greedy policy
+LR = 0.01                   # learning rate
+EPSILON = 0.9               # greedy policy
 GAMMA = 0.9                 # reward discount
-TARGET_REPLACE_ITER = 5    # target update frequency
+TARGET_REPLACE_ITER = 5   # target update frequency
 MEMORY_CAPACITY = 10000
 server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
                                           0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
@@ -36,16 +36,16 @@ env = Cluster(init_state, server_attribute)
 N_ACTIONS = len(env.action_space)
 N_STATES = 48
 # ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape
-
+device = torch.device('cuda:0')
 
 class Net(nn.Module):
     def __init__(self, ):
         super(Net, self).__init__()
         # self.fc1 = nn.Linear(N_STATES, 50)
-        self.fc1 = nn.Linear(N_STATES, 100)
+        self.fc1 = nn.Linear(N_STATES, 50)
         self.fc1.weight.data.normal_(0, 0.1)   # initialization
         #self.out = nn.Linear(50, N_ACTIONS)
-        self.out = nn.Linear(100, N_ACTIONS)
+        self.out = nn.Linear(50, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
@@ -57,7 +57,7 @@ class Net(nn.Module):
 
 class DQN(object):
     def __init__(self):
-        self.eval_net, self.target_net = Net(), Net()
+        self.eval_net, self.target_net = Net().to(device), Net().to(device)
         self.learn_step_counter = 0                                     # for target updating
         self.memory_counter = 0                                         # for storing memory
         self.memory = np.zeros((MEMORY_CAPACITY, N_STATES * 2 + 2))     # initialize memory
@@ -65,11 +65,11 @@ class DQN(object):
         self.loss_func = nn.MSELoss()
 
     def choose_action(self, x):
-        x = torch.unsqueeze(torch.FloatTensor(x), 0)
+        x = (torch.unsqueeze(torch.FloatTensor(x), 0)).to(device)
         # input only one sample
         if np.random.uniform() < EPSILON:   # greedy
             actions_value = self.eval_net.forward(x)
-            action = torch.max(actions_value, 1)[1].data.numpy()
+            action = torch.max(actions_value, 1)[1].data.cpu().numpy()
             # action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)  # return the argmax index
         else:   # random
             action = np.random.randint(0, N_ACTIONS)
@@ -87,22 +87,24 @@ class DQN(object):
         # target parameter update
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
+            self.target_net.to(device)
+            print(next(self.target_net.parameters()).device)
         self.learn_step_counter += 1
 
         # sample batch transitions
         sample_index = np.random.choice(MEMORY_CAPACITY, BATCH_SIZE)
         b_memory = self.memory[sample_index, :]
-        b_s = torch.FloatTensor(b_memory[:, :N_STATES])
-        b_a = torch.LongTensor(b_memory[:, N_STATES:N_STATES+1].astype(int))
-        b_r = torch.FloatTensor(b_memory[:, N_STATES+1:N_STATES+2])
-        b_s_ = torch.FloatTensor(b_memory[:, -N_STATES:])
+        b_s = torch.FloatTensor(b_memory[:, :N_STATES]).to(device)
+        b_a = torch.LongTensor(b_memory[:, N_STATES:N_STATES+1].astype(int)).to(device)
+        b_r = torch.FloatTensor(b_memory[:, N_STATES+1:N_STATES+2]).to(device)
+        b_s_ = torch.FloatTensor(b_memory[:, -N_STATES:]).to(device)
 
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
         q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE, 1)   # shape (batch, 1)
         loss = self.loss_func(q_eval, q_target)
-        print("loss:", loss)
+        # print("loss:", loss)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -118,7 +120,7 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(50000):
+    for i_episode in range(500000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -137,14 +139,14 @@ if __name__ == '__main__':
             state__arr = env.state_array(state_)
 
             different = [y for y in (state_arr_for_one + state__arr) if y not in state_arr_for_one]
-            print("different:", different)
+            # print("different:", different)
             if ((reward_ < init_reward and reward_ < min(reward_list)) or
                  (len(different) == 0 and reward_ >= reward and reward_ > (init_reward))):
                 done = True
             else:
                 done = False
             # RL learn from this transition
-            print("done:", done)
+            # print("done:", done)
 
             reward = reward_
             reward_list.append(reward)
@@ -157,13 +159,13 @@ if __name__ == '__main__':
 
             ep_r += reward
             if dqn.memory_counter > MEMORY_CAPACITY:
-                print("learn")
+                # print("learn")
                 dqn.learn()
                 if done:
-                    if i_episode % 50 == 0:
+                    if i_episode % 100 == 0:
                         reward_all_list.append(reward)
-                    print('Ep: ', i_episode,
-                          '| Ep_r: ', round(ep_r, 2))
+                    # print('Ep: ', i_episode,
+                    #       '| Ep_r: ', round(ep_r, 2))
 
             sum += 1
 
@@ -194,14 +196,14 @@ if __name__ == '__main__':
         print("The reward list:", reward_list)
         print("The best reward in this epoch：", max(reward_list))
         print("The final reward in this epoch:", reward)
-        print("The final cost in this epoch:", cost_all)
-        print("当前状态与初始状态的差别", different_init)
-        print("当前状态与初始状态的差别数", len(different_init))
+        # print("The final cost in this epoch:", cost_all)
+        # print("当前状态与初始状态的差别", different_init)
+        # print("当前状态与初始状态的差别数", len(different_init))
         print("epoch_time:", epoch_time, "\n")
 
     print("------------------------")
-    print("The final state_array:", state__arr)
-    print("The final cost:", cost_all)
+    # print("The final state_array:", state__arr)
+    # print("The final cost:", cost_all)
 
     improve = ((reward_all_list[-1] - init_reward)/init_reward)*100
     print("The improve percent:", improve, "%")
