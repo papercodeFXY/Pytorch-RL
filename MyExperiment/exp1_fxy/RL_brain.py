@@ -11,20 +11,8 @@ import matplotlib.pyplot as plt
 import pylab as pl
 from itertools import chain
 
-def state_init():
-    init_state = pd.DataFrame(np.zeros(327*8).reshape(327, 8), columns=[0, 1, 2, 3, 4, 5, 6, 7])
-    for i in range(len(init_state)):
-        j = random.randint(0, len(init_state.columns)-1)
-        init_state.iloc[i][j] = 1
-    return init_state
-
-# Hyper Parameters
-BATCH_SIZE = 128
-LR = 0.0005                   # learning rate
-EPSILON = 0.8               # greedy policy
-GAMMA = 0.9                 # reward discount
-TARGET_REPLACE_ITER = 5   # target update frequency
-MEMORY_CAPACITY = 10000
+DataSet_filePath = "./QueryAttribute_longtail"
+server_number = 8
 server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                           0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
                                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
@@ -35,6 +23,41 @@ server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1,
                                           0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]).
                                 reshape(8, 24),
                                 columns=np.arange(24))
+
+def read_file(DataSet_filePath):
+    with open(DataSet_filePath, 'r') as f:
+        content = f.readlines()
+        QSs = []
+        for item in content:
+            QS = []
+            item = item.strip("\n")
+            q = item.split(",")[0]
+            targetAttribute = item.split(",")[1:]
+            targetAttribute = list(map(int, targetAttribute))
+            servers = []
+            for attribute in targetAttribute:
+                server = server_attribute[server_attribute.loc[:, attribute] == 1].index[0]
+                servers.append(server)
+            QS.append(int(q))
+            QS.append(servers)
+            QSs.append(QS)
+    return QSs
+
+def state_init():
+    init_state = pd.DataFrame(np.zeros(len(read_file(DataSet_filePath))*server_number).reshape(len(read_file(DataSet_filePath)), server_number), columns=np.arange(server_number))
+    for i in range(len(init_state)):
+        j = random.randint(0, len(init_state.columns)-1)
+        init_state.iloc[i][j] = 1
+    return init_state
+
+# Hyper Parameters
+BATCH_SIZE = 32
+LR = 0.0005                   # learning rate
+EPSILON = 0.8               # greedy policy
+GAMMA = 0.9                 # reward discount
+TARGET_REPLACE_ITER = 5   # target update frequency
+MEMORY_CAPACITY = 10000
+
 # server_attribute = pd.DataFrame(np.array([0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
 #                                           0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
 #                                           1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -42,7 +65,8 @@ server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1,
 #                                 reshape(4, 12),
 #                                 columns=np.arange(12))
 init_state = state_init()
-env = Cluster(init_state, server_attribute)
+QSs = read_file(DataSet_filePath)
+env = Cluster(init_state, server_attribute, QSs, server_number)
 N_ACTIONS = len(env.action_space)
 N_STATES = len(env.state_init)*len(env.state_init.columns)
 # ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape
@@ -100,7 +124,7 @@ class DQN(object):
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
             self.target_net.to(device)
-            print(next(self.target_net.parameters()).device)
+            # print(next(self.target_net.parameters()).device)
         self.learn_step_counter += 1
 
         # sample batch transitions
@@ -132,7 +156,7 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(20000):
+    for i_episode in range(40000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -174,7 +198,7 @@ if __name__ == '__main__':
                 # print("learn")
                 dqn.learn()
                 if done:
-                    if (i_episode+1) % 50 == 0:
+                    if (i_episode+1) % 100 == 0:
                         reward_all_list.append(reward)
 
             sum += 1
