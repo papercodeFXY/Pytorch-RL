@@ -198,8 +198,7 @@ if __name__ == '__main__':
                 # print("learn")
                 dqn.learn()
                 if done:
-                    if (i_episode+1) % 100 == 0:
-                        reward_all_list.append(reward)
+                   reward_all_list.append(reward)
 
             sum += 1
 
@@ -236,8 +235,8 @@ if __name__ == '__main__':
 
     improve_list.append(improve)
 
-    y_1 = reward_all_list
-    y_all_list = y_1
+    reward_all_list_np = np.array(reward_all_list)
+    y_all_list = np.mean(reward_all_list_np.reshape(-1, 100), axis=1)
     print("y_all_list:", len(y_all_list))
     x = (np.arange(len(y_all_list)))
     y = y_all_list
