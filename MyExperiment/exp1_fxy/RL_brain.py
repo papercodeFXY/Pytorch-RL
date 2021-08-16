@@ -197,8 +197,8 @@ if __name__ == '__main__':
             if dqn.memory_counter > MEMORY_CAPACITY:
                 # print("learn")
                 dqn.learn()
-                if done:
-                   reward_all_list.append(reward)
+
+
 
             sum += 1
 
@@ -211,7 +211,7 @@ if __name__ == '__main__':
             costs = costs_
             state = state_
 
-
+        reward_all_list.append(reward)
         epoch_curr_time2 = datetime.datetime.now()
         epoch_time = epoch_curr_time2 - epoch_curr_time1
 
