@@ -13,12 +13,6 @@ class Cluster(tk.Tk, object):
     def __init__(self, state_init, server_attribute, QSs, server_number):
         super(Cluster, self).__init__()
         self.server_number = server_number
-
-        # self.cost_matrix = pd.DataFrame(np.array([[0,1,5,12],
-        #                                           [1,0,4,2],
-        #                                           [5,4,0,3],
-        #                                           [12,2,3,0]]),
-        #                                     columns=[0, 1, 2, 3])
         self.cost_matrix = pd.DataFrame(np.array([[0,1,5,12,7,10,15,9],
                                                   [1,0,4,2,8,6,11,10],
                                                   [5,4,0,3,11,13,8,5],
@@ -35,6 +29,7 @@ class Cluster(tk.Tk, object):
         self.state_init = state_init
 
         self.cost_init = self.cost_init()
+
 
     def step(self, action, state, costs):
         s = state.copy()
@@ -57,7 +52,7 @@ class Cluster(tk.Tk, object):
         return s_, costs, reward, cost_all
 
 
-    #判断结束的条件 选择的action在执行之后状态仍然没有变 or 判断状态是否在处与某种情况下，例如负载不平衡
+    # generate the total action set
     def action_list(self):
         action = []
         for i in range(len(self.QSs)):
@@ -92,9 +87,6 @@ class Cluster(tk.Tk, object):
         return cost
 
 
-    # create the initial state matrix（random）
-
-
     # compute the total reward based on the costs array
     def cost_all(self, costs):
         cost_all = 0
@@ -126,35 +118,3 @@ class Cluster(tk.Tk, object):
                     state_arr.append(j)
                     states.append(state_arr)
         return states
-
-# if __name__ == '__main__':
-#     server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-#                                               0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-#                                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-#                                               1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-#                                               0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-#                                               0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,
-#                                               0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
-#                                               0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]).
-#                                     reshape(8, 24),
-#                                     columns=np.arange(24))
-
-    # env = Cluster(state_init(), server_attribute)
-    # Qss = env.QSs
-    # print(Qss)
-    # for i in range(len(Qss)):
-    #     q = i
-    #     for j in range(len(server_attribute)):
-    #         index_server = j
-
-
-
-    # print(env.cost_init)
-    # print("The reward of initial state is:")
-    # print(env.reward(env.cost_all(env.cost_init), env.state_init))
-
-    # print(env.state_init)
-    # actions=list(range(env.n_actions))
-    # print(actions)
-    # env.after(100, update)
-    # env.mainloop()

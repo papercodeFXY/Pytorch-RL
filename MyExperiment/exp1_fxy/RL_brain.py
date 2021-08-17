@@ -51,7 +51,7 @@ def state_init():
     return init_state
 
 # Hyper Parameters
-BATCH_SIZE = 32
+BATCH_SIZE = 256
 LR = 0.0005                   # learning rate
 EPSILON = 0.8               # greedy policy
 GAMMA = 0.9                 # reward discount
@@ -149,14 +149,13 @@ class DQN(object):
 
 if __name__ == '__main__':
     curr_time1 = datetime.datetime.now()
-    improve_list = []
     dqn = DQN()
 
     print('\nCollecting experience...')
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(40000):
+    for i_episode in range(60000):
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -198,8 +197,6 @@ if __name__ == '__main__':
                 # print("learn")
                 dqn.learn()
 
-
-
             sum += 1
 
             if done:
@@ -233,15 +230,13 @@ if __name__ == '__main__':
     improve = ((reward_all_list[-1] - init_reward)/init_reward)*100
     print("The improve percent:", improve, "%")
 
-    improve_list.append(improve)
-
     reward_all_list_np = np.array(reward_all_list)
     y_all_list = np.mean(reward_all_list_np.reshape(-1, 100), axis=1)
     print("y_all_list:", len(y_all_list))
     x = (np.arange(len(y_all_list)))
     y = y_all_list
     y1 = [init_reward]*len(x)
-    fig = plt.Figure(figsize=(14, 10))
+    fig = plt.Figure(figsize=(24, 20))
     pl.plot(x, y, label=u'RL')
     pl.legend()
     pl.plot(x, y1, label=u'Init')
