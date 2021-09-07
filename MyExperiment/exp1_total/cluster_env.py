@@ -100,16 +100,12 @@ class Cluster(tk.Tk, object):
             list.append(state[i].sum())
 
         load_weight_var = np.var(list)
-        reward = 100*self.tanh((10*len(state)/cost_all))*self.tanh(10*self.function(1.1, load_weight_var))
-        # reward = (len(state)/cost_all) * 100*self.function(1.1, load_weight_var)
+        reward = 10000*(len(state)/cost_all) + self.function(1.1, load_weight_var)
         return reward
 
     def function(self, a, x):
-        y = 1/(a**x)
+        y = 100/(a**x)
         return y
-
-    def tanh(self, x):
-        return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
 
     # transform the state matrix into array
     def state_array(self, state):
