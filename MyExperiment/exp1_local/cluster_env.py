@@ -46,10 +46,10 @@ class Cluster(tk.Tk, object):
         cost_new = self.cost_caculate(q, index_server)
         costs[q] = cost_new
         cost_all = self.cost_all(costs)
-        reward = self.reward(cost_all, s)
+        reward, list_var = self.reward(cost_all, s)
         s_ = s
 
-        return s_, costs, reward, cost_all
+        return s_, costs, reward, cost_all, list_var
 
 
     # generate the total action set
@@ -98,16 +98,16 @@ class Cluster(tk.Tk, object):
         return cost_all
 
     def reward(self, cost_all, state):
-        list = []
+        list_var = []
         for i in state.columns:
-            list.append(state[i].sum())
-
-        load_weight_var = np.var(list)
+            list_var.append(state[i].sum())
+        print("用于求方差的数组", list_var)
+        load_weight_var = np.var(list_var)
         # reward = 1000*(len(state)/cost_all) + 10*self.function(1.1, load_weight_var)
         reward = 100*10*(len(state)/cost_all)*self.tanh(100*self.function(1.1, load_weight_var))
         print("cost", self.tanh((10*len(state)/cost_all)))
         print("方差", load_weight_var)
-        return reward
+        return reward, list_var
 
     def function(self, a, x):
         y = 1/(x)
