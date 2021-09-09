@@ -13,7 +13,6 @@ class Cluster(tk.Tk, object):
     def __init__(self, state_init, server_attribute, QSs, server_number):
         super(Cluster, self).__init__()
         self.server_number = server_number
-
         # self.cost_matrix = pd.DataFrame(np.array([[0,1,5,12],
         #                                           [1,0,4,2],
         #                                           [5,4,0,3],
@@ -46,10 +45,10 @@ class Cluster(tk.Tk, object):
         cost_new = self.cost_caculate(q, index_server)
         costs[q] = cost_new
         cost_all = self.cost_all(costs)
-        reward, list_var = self.reward(cost_all, s)
+        reward, list_var, load_weight_var = self.reward(cost_all, s)
         s_ = s
 
-        return s_, costs, reward, cost_all, list_var
+        return s_, costs, reward, cost_all, list_var, load_weight_var
 
 
     # generate the total action set
@@ -101,13 +100,13 @@ class Cluster(tk.Tk, object):
         list_var = []
         for i in state.columns:
             list_var.append(state[i].sum())
-        print("用于求方差的数组", list_var)
         load_weight_var = np.var(list_var)
         # reward = 1000*(len(state)/cost_all) + 10*self.function(1.1, load_weight_var)
-        reward = 100*10*(len(state)/cost_all)*self.tanh(100*self.function(1.1, load_weight_var))
-        print("cost", self.tanh((10*len(state)/cost_all)))
-        print("方差", load_weight_var)
-        return reward, list_var
+        # reward = 100*10*(len(state)/cost_all)*self.tanh(100*self.function(1.1, load_weight_var))
+        reward = (len(state)/cost_all) * 100*self.function(1.1, load_weight_var)
+        # reward = 100*self.tanh((10*len(state)/cost_all))*self.tanh(10*self.function(1.1, load_weight_var))
+        print("cost", 100*10*(len(state)/cost_all))
+        return reward, list_var, load_weight_var
 
     def function(self, a, x):
         y = 1/(x)
