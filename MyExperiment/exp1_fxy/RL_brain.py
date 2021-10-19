@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pylab as pl
 from itertools import chain
 
-DataSet_filePath = "./QueryAttribute"
+DataSet_filePath = "QueryAttribute_poission_50"
 server_number = 8
 server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                           0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
@@ -153,8 +153,8 @@ if __name__ == '__main__':
     cost_all_list = []
     reward_all_list = []
     init_reward = env.reward(env.cost_all(env.cost_init), env.state_init)
-    for i_episode in range(40000):
-        print("数据集是泊松分布,reward是一个tanh")
+    for i_episode in range(60000):
+        print("数据集是泊松分布,reward是两个tanh")
         epoch_curr_time1 = datetime.datetime.now()
         # initial state
         state_init_arr = env.state_array(env.state_init)
@@ -227,7 +227,7 @@ if __name__ == '__main__':
     pl.legend()
     pl.xlabel(u"epoch", size=14)
     pl.ylabel(u"reward", size=14)
-    plt.savefig("D:\\SynologyDrive\\泊松_一个tanh.png")
+    plt.savefig("D:\\SynologyDrive\\Paper\\BIP\\Experiment\\实验结果_查询数50\\泊松_两个tanh.png")
     plt.show()
     curr_time2 = datetime.datetime.now()
     train_time = curr_time2-curr_time1

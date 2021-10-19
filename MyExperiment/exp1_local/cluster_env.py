@@ -101,10 +101,10 @@ class Cluster(tk.Tk, object):
         for i in state.columns:
             list_var.append(state[i].sum())
         load_weight_var = np.var(list_var)
-        # reward = 1000*(len(state)/cost_all) + 10*self.function(1.1, load_weight_var)
+        # reward = (len(state)/cost_all) * 100 * self.function(1.1, load_weight_var)
         # reward = 100*10*(len(state)/cost_all)*self.tanh(100*self.function(1.1, load_weight_var))
-        reward = (len(state)/cost_all) * 100*self.function(1.1, load_weight_var)
-        # reward = 100*self.tanh((10*len(state)/cost_all))*self.tanh(10*self.function(1.1, load_weight_var))
+        # reward = (len(state)/cost_all) * 100*self.function(1.1, load_weight_var)
+        reward = 100*self.tanh((10*len(state)/cost_all))*self.tanh(10*self.function(1.1, load_weight_var))
         print("cost", 100*10*(len(state)/cost_all))
         return reward, list_var, load_weight_var
 

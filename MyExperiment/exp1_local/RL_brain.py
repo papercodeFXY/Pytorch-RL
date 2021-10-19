@@ -5,7 +5,7 @@ import random
 from cluster_env import Cluster
 import datetime
 
-DataSet_filePath = "./QueryAttribute_longtail"
+DataSet_filePath = "./QueryAttribute_longtail_300"
 server_number = 8
 server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                           0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
@@ -61,7 +61,7 @@ def generate_server(list_var_small_all, probabilities_list):
             return item[0]
 
 if __name__ == '__main__':
-    episode = 100
+    episode = 10000
     QSs = read_file(DataSet_filePath)
     for i in range(episode):
         init_state = state_init()
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     print("未考虑负载均衡时用于求方差的数组", list_var)
     print("reward_:", reward_)
 
-    for n in range(3):
+    for n in range(4):
         # 将数据集中的众数（也就是出现次数最多的元素）去除，以免影响方差
         attri = []
         for item in QSs:
@@ -111,7 +111,7 @@ if __name__ == '__main__':
             for i, item in enumerate(attri):
                 if item == j:
                     index.append(i)
-        print("index的数量", len(index))
+        # print("index的数量", len(index))
 
         QSs_mode = [QSs[i] for i in range(len(QSs)) if i in index]
         QSs = [QSs[i] for i in range(len(QSs)) if i not in index]
@@ -147,8 +147,8 @@ if __name__ == '__main__':
         print("reward_:", reward_)
 
 
-
     improve = ((reward_ - (sum(init_reward_list)/len(init_reward_list)))/(sum(init_reward_list)/len(init_reward_list)))*100
+    print("init_reward_average:", sum(init_reward_list)/len(init_reward_list))
     print("The improve percent:", improve, "%")
 
     curr_time2 = datetime.datetime.now()
