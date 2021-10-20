@@ -5,7 +5,7 @@ import random
 from cluster_env import Cluster
 import datetime
 
-DataSet_filePath = "./QueryAttribute_longtail_300"
+DataSet_filePath = "./QueryAttribute_longtail_100"
 server_number = 8
 server_attribute = pd.DataFrame(np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                           0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
@@ -61,7 +61,7 @@ def generate_server(list_var_small_all, probabilities_list):
             return item[0]
 
 if __name__ == '__main__':
-    episode = 10000
+    episode = 5000
     QSs = read_file(DataSet_filePath)
     for i in range(episode):
         init_state = state_init()
@@ -150,10 +150,10 @@ if __name__ == '__main__':
     improve = ((reward_ - (sum(init_reward_list)/len(init_reward_list)))/(sum(init_reward_list)/len(init_reward_list)))*100
     print("init_reward_average:", sum(init_reward_list)/len(init_reward_list))
     print("The improve percent:", improve, "%")
-    f = open("D:\\SynologyDrive\\Paper\\BIP\\Experiment\\实验结果_查询数300\\init_reward.txt", "a")
-    f.write("reward:"+str(reward_)+"\n"+
-            "init_reward_average:"+str(sum(init_reward_list)/len(init_reward_list))+"\n"+
-            "improve:"+str(improve))
+    f = open("D:\\SynologyDrive\\Paper\\BIP\\Experiment\\实验结果_查询数100\\init_reward_longtail.txt", "a")
+    f.write("reward:"+str(reward_)+"\n" +
+            "init_reward_average:"+str(sum(init_reward_list)/len(init_reward_list))+"\n" +
+            "improve:"+str(improve)+"%")
     f.close()
 
     curr_time2 = datetime.datetime.now()
