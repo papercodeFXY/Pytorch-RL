@@ -98,7 +98,7 @@ if __name__ == '__main__':
     print("未考虑负载均衡时用于求方差的数组", list_var)
     print("reward_:", reward_)
 
-    for n in range(4):
+    for n in range(5):
         # 将数据集中的众数（也就是出现次数最多的元素）去除，以免影响方差
         attri = []
         for item in QSs:
@@ -150,8 +150,10 @@ if __name__ == '__main__':
     improve = ((reward_ - (sum(init_reward_list)/len(init_reward_list)))/(sum(init_reward_list)/len(init_reward_list)))*100
     print("init_reward_average:", sum(init_reward_list)/len(init_reward_list))
     print("The improve percent:", improve, "%")
-    f = open("D:\\SynologyDrive\\Paper\\BIP\\Experiment\\实验结果_查询数50\\init_reward.txt", "a")
-    f.write("reward:"+str(reward_)+"\n"+"init_reward_average:"+str(sum(init_reward_list)/len(init_reward_list)))
+    f = open("D:\\SynologyDrive\\Paper\\BIP\\Experiment\\实验结果_查询数300\\init_reward.txt", "a")
+    f.write("reward:"+str(reward_)+"\n"+
+            "init_reward_average:"+str(sum(init_reward_list)/len(init_reward_list))+"\n"+
+            "improve:"+str(improve))
     f.close()
 
     curr_time2 = datetime.datetime.now()
