@@ -227,7 +227,7 @@ if __name__ == '__main__':
     pl.legend()
     pl.xlabel(u"epoch", size=14)
     pl.ylabel(u"reward", size=14)
-    plt.savefig("D:\\SynologyDrive\\Paper\\BIP\\Experiment\\实验结果_查询数50\\泊松_两个tanh.png")
+    plt.savefig("D:/SynologyDrive/Paper/BIP/Experiment/实验结果_查询数50/mac-test.png")
     plt.show()
     curr_time2 = datetime.datetime.now()
     train_time = curr_time2-curr_time1
